@@ -3,22 +3,21 @@ package frames;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.JCheckBox;
+import javax.swing.table.TableModel;
 
 public class MainJFrame extends javax.swing.JFrame {
 
     public MainJFrame() {
-        checks = new Object[10];
-        id = 1;
+        id = 0;
         tableModel = (new DefaultTableModel(new Object [][] {},
                                             new String [] {
                                                 "", "ID", "X", "Y", "R", "A", "V", "D"}
                                             ) {
             Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Integer.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class
+                Boolean.class, java.lang.Integer.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false
+                true, false, false, false, false, false, false, false
             };
 
             @Override
@@ -386,8 +385,8 @@ public class MainJFrame extends javax.swing.JFrame {
                     Float speed = Float.parseFloat(insertSpeed.getText());
                     Float direction = Float.parseFloat(insertDirection.getText());
                     Float radius = Float.parseFloat(insertRadius.getText());
-                    checks[id-1] = new JCheckBox();
-                    tableModel.addRow(new Object[]{checks[id-1], id, x, y, radius, angle, speed, direction});
+                    tableModel.addRow(new Object[]{Boolean.FALSE, id, x, y, radius, angle, speed, direction});
+                    id++;
                 }
             }
         });
@@ -422,9 +421,22 @@ public class MainJFrame extends javax.swing.JFrame {
         return !trackDistance.getText().isEmpty();
     }
     
+    private Object[][] getSelectedPlanes(){
+        TableModel modelo = planeTable.getModel();
+        Object[][] lista = new Object[10][8];
+        for(int i=0; i<modelo.getRowCount(); i++){
+            int j = 0;
+            if((Boolean)modelo.getValueAt(i, j)){
+                for(; j<modelo.getColumnCount(); j++){
+                    
+                }
+            }
+        }
+        return true;
+    }
+        
     private DefaultTableModel tableModel;
     private Integer id;
-    private Object checks[];
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton collisionButton;
