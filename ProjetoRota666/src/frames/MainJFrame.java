@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.swing.JOptionPane;
 
 public class MainJFrame extends javax.swing.JFrame {
 
@@ -81,13 +82,17 @@ public class MainJFrame extends javax.swing.JFrame {
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
+        insertAngle.setEditable(false);
+
         insertButton.setText("Inserir");
 
         jLabel1.setText("Y:");
 
-        jLabel2.setText("Ã‚ngulo:");
+        jLabel2.setText("Ângulo:");
 
-        jLabel3.setText("DireÃ§Ã£o:");
+        jLabel3.setText("Direção:");
+
+        insertRadius.setEditable(false);
 
         jLabel4.setText("X:");
 
@@ -171,7 +176,7 @@ public class MainJFrame extends javax.swing.JFrame {
 
         transScale.setText("Escalonar");
 
-        jLabel9.setText("Ã‚ngulo:");
+        jLabel9.setText("Ângulo:");
 
         transRotate.setText("Rotacionar");
 
@@ -182,7 +187,7 @@ public class MainJFrame extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel8)
                             .addComponent(jLabel7))
@@ -205,16 +210,20 @@ public class MainJFrame extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(transX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel7)
-                    .addComponent(transMove))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel8)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(transY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(transScale)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(transMove)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(transScale))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(transX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(transY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel8)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -226,11 +235,11 @@ public class MainJFrame extends javax.swing.JFrame {
 
         jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
-        jLabel10.setText("DistÃ¢ncia:");
+        jLabel10.setText("Distância:");
 
-        trackNearAirport.setText("PrÃ³ximos ao aeroporto");
+        trackNearAirport.setText("Próximos ao aeroporto");
 
-        trackNearPlane.setText("PrÃ³ximos a outro aviÃ£o");
+        trackNearPlane.setText("Próximos a outro avião");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -277,7 +286,7 @@ public class MainJFrame extends javax.swing.JFrame {
 
         jLabel11.setText("Tempo:");
 
-        collisionButton.setText("Rota de colisÃ£o");
+        collisionButton.setText("Rota de colisão");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -365,6 +374,7 @@ public class MainJFrame extends javax.swing.JFrame {
     public static void main(String args[]) {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new MainJFrame().setVisible(true);
             }
@@ -444,7 +454,6 @@ public class MainJFrame extends javax.swing.JFrame {
             int j = 0;
             if((Boolean)modelo.getValueAt(i, j)){
                 for(; j<modelo.getColumnCount(); j++){
-                    
                 }
             }
         }
@@ -484,6 +493,55 @@ public class MainJFrame extends javax.swing.JFrame {
         }
         
         return false;
+    }
+    
+    private Object[] escalonar(Object[] plane){
+        if(testTransScaleFields()){
+            int x = Integer.parseInt(transX.getText());
+            int y = Integer.parseInt(transY.getText());
+            
+            plane[2] = (Object)((float)plane[2]*x);
+            plane[3] = (Object)((float)plane[3]*y);
+            
+            return plane;
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Preencha os campos X e Y");
+            return null;
+        }
+    }
+    
+    private Object[] transladar(Object[] plane){
+        if(testTransMoveFields()){
+            int x = Integer.parseInt(transX.getText());
+            int y = Integer.parseInt(transY.getText());
+            
+            plane[2] = (Object)((float)plane[2] + x);
+            plane[3] = (Object)((float)plane[2] + y);
+            
+            return plane;
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Preencha os campos X e Y");
+            return null;
+        }
+    }
+    
+    private Object[] rotacionar(Object[] plane){
+        if(testTransRotateFields()){
+            int x = Integer.parseInt(transX.getText());
+            int y = Integer.parseInt(transY.getText());
+            int angle = Integer.parseInt(transAngle.getText());
+            
+            plane[2] = (Object)((float)plane[2] - x);
+            plane[3] = (Object)((float)plane[3] - y);
+            
+            return null;
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Preencha os campos X, Y e Ângulo");
+            return null;
+        }
     }
         
     private DefaultTableModel tableModel;
