@@ -88,9 +88,9 @@ public class MainJFrame extends javax.swing.JFrame {
 
         jLabel1.setText("Y:");
 
-        jLabel2.setText("Ângulo:");
+        jLabel2.setText("ï¿½ngulo:");
 
-        jLabel3.setText("Direção:");
+        jLabel3.setText("Direï¿½ï¿½o:");
 
         insertRadius.setEditable(false);
 
@@ -176,7 +176,7 @@ public class MainJFrame extends javax.swing.JFrame {
 
         transScale.setText("Escalonar");
 
-        jLabel9.setText("Ângulo:");
+        jLabel9.setText("ï¿½ngulo:");
 
         transRotate.setText("Rotacionar");
 
@@ -235,11 +235,11 @@ public class MainJFrame extends javax.swing.JFrame {
 
         jPanel3.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
-        jLabel10.setText("Distância:");
+        jLabel10.setText("Distï¿½ncia:");
 
-        trackNearAirport.setText("Próximos ao aeroporto");
+        trackNearAirport.setText("Prï¿½ximos ao aeroporto");
 
-        trackNearPlane.setText("Próximos a outro avião");
+        trackNearPlane.setText("Prï¿½ximos a outro aviï¿½o");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -286,7 +286,7 @@ public class MainJFrame extends javax.swing.JFrame {
 
         jLabel11.setText("Tempo:");
 
-        collisionButton.setText("Rota de colisão");
+        collisionButton.setText("Rota de colisï¿½o");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -416,6 +416,22 @@ public class MainJFrame extends javax.swing.JFrame {
                 }
             }
         });
+        
+        this.trackNearPlane.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                planeNearPlane(getSelectedPlanes());
+            }
+        });
+        
+        this.insertX.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(insertY.getText() != null){
+                    angleRadiusCalc({null, null, insertX.getText(), insertY.getText(), null, null, null, null});
+                }
+            }
+        });
     }
     
     private boolean testInsertionFields(){
@@ -454,6 +470,7 @@ public class MainJFrame extends javax.swing.JFrame {
             int j = 0;
             if((Boolean)modelo.getValueAt(i, j)){
                 for(; j<modelo.getColumnCount(); j++){
+                    lista[i][j] = modelo.getValueAt(i, j);
                 }
             }
         }
@@ -489,7 +506,22 @@ public class MainJFrame extends javax.swing.JFrame {
         double yCollB = yB + xColl;
         
         if(yCollA == yCollB){
+            float speedA = (float)plane[0][6];
+            float speedB = (float)plane[1][6];
             
+            double distA = Math.sqrt(Math.pow((float)plane[0][2], 2) + Math.pow((float)plane[0][3], 2));
+            double distB = Math.sqrt(Math.pow((float)plane[1][2], 2) + Math.pow((float)plane[1][3], 2));
+            
+            double timeA = distA/speedA;
+            double timeB = distB/speedB;
+            
+            if(Math.abs(timeA - timeB) < Integer.parseInt(collisionTime.getText())){
+                reportArea.append("AviÃ£o " + plane[0][1] + "em rota de colisÃ£o com aviÃ£o " + plane[1][1]);
+                return true;
+            }
+            else{
+                reportArea.append("AviÃ£o " + plane[0][1] + "com tempo de colisÃ£o " + Math.abs(timeA - timeB) + "com aviÃ£o " + plane[1][1]);
+            }
         }
         
         return false;
@@ -502,6 +534,8 @@ public class MainJFrame extends javax.swing.JFrame {
             
             plane[2] = (Object)((float)plane[2]*x);
             plane[3] = (Object)((float)plane[3]*y);
+            
+            plane = angleRadiusCalc(plane);
             
             return plane;
         }
@@ -517,7 +551,9 @@ public class MainJFrame extends javax.swing.JFrame {
             int y = Integer.parseInt(transY.getText());
             
             plane[2] = (Object)((float)plane[2] + x);
-            plane[3] = (Object)((float)plane[2] + y);
+            plane[3] = (Object)((float)plane[3] + y);
+            
+            plane = angleRadiusCalc(plane);
             
             return plane;
         }
@@ -533,15 +569,41 @@ public class MainJFrame extends javax.swing.JFrame {
             int y = Integer.parseInt(transY.getText());
             int angle = Integer.parseInt(transAngle.getText());
             
-            plane[2] = (Object)((float)plane[2] - x);
-            plane[3] = (Object)((float)plane[3] - y);
+            float centerX = (float)plane[2] - x;
+            float centerY = (float)plane[3] - y;
             
-            return null;
+            plane[2] = (Object)(centerX*Math.cos(angle) - centerY*Math.sin(angle));
+            plane[3] = (Object)(centerY*Math.cos(angle) + centerX*Math.sin(angle));
+            
+            plane = angleRadiusCalc(plane);
+            
+            return plane;
         }
         else{
-            JOptionPane.showMessageDialog(null, "Preencha os campos X, Y e Ângulo");
+            JOptionPane.showMessageDialog(null, "Preencha os campos X, Y e ï¿½ngulo");
             return null;
         }
+    }
+    
+    private void planeNearPlane(Object[][] planes){
+        if(testTrackFields()){
+            float xDiff = (float)planes[0][2] - (float)planes[1][2];
+            float yDiff = (float)planes[0][3] - (float)planes[1][3];
+            double dist = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+
+            if(dist < Integer.parseInt(trackDistance.getText())){
+                reportArea.append("DistÃ¢ncia entre " + (int)planes[0][1]+ " e " + (int)planes[1][1] + "EXCEDIDA: " + dist);
+            }
+            else{
+                reportArea.append("DistÃ¢ncia entre " + (int)planes[0][1] + " e " + (int)planes[1][1]+ ": " + dist);
+            }
+        }
+    }
+    
+    private Object[] angleRadiusCalc(Object[] plane){
+        plane[5] = (Object)(Math.atan((float)plane[3]/(float)plane[2]));
+        plane[4] = (Object)(Math.sqrt(Math.pow((float)plane[2], 2) + Math.pow((float)plane[3], 2)));
+        return plane;
     }
         
     private DefaultTableModel tableModel;
