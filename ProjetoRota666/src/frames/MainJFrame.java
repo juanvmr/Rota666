@@ -5,6 +5,8 @@ import java.awt.event.ActionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.JOptionPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class MainJFrame extends javax.swing.JFrame {
 
@@ -15,7 +17,7 @@ public class MainJFrame extends javax.swing.JFrame {
                                                 "", "ID", "X", "Y", "R", "A", "V", "D"}
                                             ) {
             Class[] types = new Class [] {
-                Boolean.class, java.lang.Integer.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class, java.lang.Float.class
+                Boolean.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
             };
             boolean[] canEdit = new boolean [] {
                 true, false, false, false, false, false, false, false
@@ -411,15 +413,23 @@ public class MainJFrame extends javax.swing.JFrame {
                         for(int k=0; k<modelo.getColumnCount(); k++){
                             planes[0][k] = modelo.getValueAt(i, k);
                             planes[1][k] = modelo.getValueAt(j, k);
-                            if(testCollision(planes)){
-                                reportArea.append("Aviões " + planes[0][1] + " e " + planes[1][1] + " em rota de colisão");
+                            //System.out.println(""+planes[0][k]);
+                            //System.out.println(""+planes[1][k]);
+                            /*if(planes[0][k] instanceof Double){
+                                System.out.println("planeD"+k);
                             }
+                            if(planes[0][k] instanceof Float){
+                                System.out.println("planeF"+k);
+                            }*/
+                        }
+                        if(testCollision(planes)){
+                            reportArea.append("Aviões " + planes[0][1] + " e " + planes[1][1] + " em rota de colisão");
                         }
                     }
                 }
             }
         });
-        
+                
         this.trackNearPlane.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -427,28 +437,94 @@ public class MainJFrame extends javax.swing.JFrame {
             }
         });
         
-        this.insertX.addActionListener(new ActionListener() {
+        this.transMove.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(insertY.getText() != null){
-                    setAngleRadiusFields(insertX.getText(), insertY.getText());
+                int id;
+                for (Object[] plane : getSelectedPlanes()) {
+                    if(plane != null){
+                        id = Integer.parseInt(plane[1].toString());
+                        tableModel.removeRow(id);
+                        tableModel.insertRow(id, transladar(plane));
+                        planeTable.setModel(tableModel);
+                    }
                 }
+            }
+        });
+        
+        this.transRotate.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int id;
+                for (Object[] plane : getSelectedPlanes()) {
+                    id = Integer.parseInt(plane[1].toString());
+                    tableModel.removeRow(id);
+                    tableModel.insertRow(id, rotacionar(plane));
+                    planeTable.setModel(tableModel);
+                }
+            }
+        });
+        
+        this.transScale.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int id;
+                for (Object[] plane : getSelectedPlanes()) {
+                    id = Integer.parseInt(plane[1].toString());
+                    tableModel.removeRow(id);
+                    tableModel.insertRow(id, escalonar(plane));
+                    planeTable.setModel(tableModel);
+                }
+            }
+        });
+        
+        this.insertX.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                setAngleRadiusFields(insertX.getText(), insertY.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                setAngleRadiusFields(insertX.getText(), insertY.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                setAngleRadiusFields(insertX.getText(), insertY.getText());
+            }
+        });
+        
+        this.insertY.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                setAngleRadiusFields(insertX.getText(), insertY.getText());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                setAngleRadiusFields(insertX.getText(), insertY.getText());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                setAngleRadiusFields(insertX.getText(), insertY.getText());
             }
         });
     }
     
     private boolean testInsertionFields(){
-        return (!insertX.getText().isEmpty() && 
-                !insertY.getText().isEmpty() && 
-                !insertAngle.getText().isEmpty() && 
-                !insertDirection.getText().isEmpty() && 
-                !insertRadius.getText().isEmpty() && 
-                !insertSpeed.getText().isEmpty());
+        return (!(insertX.getText().isEmpty()) && 
+                !(insertY.getText().isEmpty()) && 
+                !(insertAngle.getText().isEmpty()) && 
+                !(insertDirection.getText().isEmpty()) && 
+                !(insertRadius.getText().isEmpty()) && 
+                !(insertSpeed.getText().isEmpty()));
     }
     
     private boolean testTransMoveFields(){
-        return (!transX.getText().isEmpty() &&
-                !transY.getText().isEmpty());
+        return (!(transX.getText().isEmpty()) &&
+                !(transY.getText().isEmpty()));
     }
     
     private boolean testTransRotateFields(){
@@ -468,7 +544,7 @@ public class MainJFrame extends javax.swing.JFrame {
     
     private Object[][] getSelectedPlanes(){
         TableModel modelo = planeTable.getModel();
-        Object[][] lista = new Object[10][8];
+        Object[][] lista = new Object[modelo.getRowCount()][8];
         for(int i=0; i<modelo.getRowCount(); i++){
             int j = 0;
             if((Boolean)modelo.getValueAt(i, j)){
@@ -477,17 +553,21 @@ public class MainJFrame extends javax.swing.JFrame {
                 }
             }
         }
-        //return true;
-        return null;
+        
+        return lista;
     }
     
     private void setAngleRadiusFields(String x, String y){
+        if(x.isEmpty() || y.isEmpty()){
+            return;
+        }
+        
         float xF = Float.parseFloat(x);
         float yF = Float.parseFloat(y);
         
-        double angle = Math.atan(yF/xF);
+        double angle = Math.toDegrees(Math.atan(yF/xF));
         double radius = Math.sqrt(Math.pow(xF, 2) + Math.pow(yF, 2));
-        
+                
         this.insertAngle.setText(""+angle);
         this.insertRadius.setText(""+radius);
     }
@@ -495,18 +575,22 @@ public class MainJFrame extends javax.swing.JFrame {
     private boolean testCollision(Object[][] plane){
         double mA;
         double mB;
-        if((int)plane[0][5]>90 && (int)plane[0][5]<270){
-            mA = (-1)*Math.tan(Math.toRadians((double)plane[0][5]+180));
+
+        double angleA = (Float)plane[0][5];
+        double angleB = (Float)plane[1][5];
+        
+        if(angleA>90 && angleA<270){
+            mA = (-1)*Math.tan(Math.toRadians(angleA+180));
         }
         else{
-            mA = Math.tan(Math.toRadians((double)plane[0][5]));
+            mA = Math.tan(Math.toRadians(angleA));
         }
         
-        if((int)plane[1][5]>90 && (int)plane[1][5]<270){
-            mB = (-1)*Math.tan(Math.toRadians((double)plane[1][5]+180));
+        if(angleB>90 && angleB<270){
+            mB = (-1)*Math.tan(Math.toRadians(angleB+180));
         }
         else{
-            mB = Math.tan(Math.toRadians((double)plane[1][5]));
+            mB = Math.tan(Math.toRadians(angleB));
         }
         
         if((mA>0 && mB>0) || (mA<0 && mB<0)){
@@ -563,9 +647,11 @@ public class MainJFrame extends javax.swing.JFrame {
         if(testTransMoveFields()){
             int x = Integer.parseInt(transX.getText());
             int y = Integer.parseInt(transY.getText());
-            
-            plane[2] = (Object)((float)plane[2] + x);
-            plane[3] = (Object)((float)plane[3] + y);
+
+            float xPlane = ((Number)plane[2]).floatValue();
+            plane[2] = (Object)(xPlane + x);
+            float yPlane = ((Number)plane[3]).floatValue();
+            plane[3] = (Object)(yPlane + y);
             
             plane = angleRadiusCalc(plane);
             
@@ -612,11 +698,17 @@ public class MainJFrame extends javax.swing.JFrame {
                 reportArea.append("Distância entre " + (int)planes[0][1] + " e " + (int)planes[1][1]+ ": " + dist);
             }
         }
+        else{
+            JOptionPane.showMessageDialog(null, "Preencha a distância");
+        }
     }
     
     private Object[] angleRadiusCalc(Object[] plane){
-        plane[5] = (Object)(Math.atan((float)plane[3]/(float)plane[2]));
-        plane[4] = (Object)(Math.sqrt(Math.pow((float)plane[2], 2) + Math.pow((float)plane[3], 2)));
+        double x = Double.valueOf((plane[2].toString()));
+        double y = Double.valueOf((plane[3].toString()));
+        
+        plane[5] = (Object)(Math.toDegrees(Math.atan(y/x)));
+        plane[4] = (Object)(Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)));
         return plane;
     }
         
