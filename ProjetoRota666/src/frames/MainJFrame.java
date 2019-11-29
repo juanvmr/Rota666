@@ -395,6 +395,9 @@ public class MainJFrame extends javax.swing.JFrame {
                     tableModel.addRow(new Object[]{Boolean.FALSE, id, x, y, radius, angle, speed, direction});
                     id++;
                 }
+                else{
+                    System.out.println("Falta preencher inserts");
+                }
             }
         });
         
@@ -409,7 +412,7 @@ public class MainJFrame extends javax.swing.JFrame {
                             planes[0][k] = modelo.getValueAt(i, k);
                             planes[1][k] = modelo.getValueAt(j, k);
                             if(testCollision(planes)){
-                                //alerta
+                                reportArea.append("Aviões " + planes[0][1] + " e " + planes[1][1] + " em rota de colisão");
                             }
                         }
                     }
@@ -428,7 +431,7 @@ public class MainJFrame extends javax.swing.JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(insertY.getText() != null){
-                    angleRadiusCalc({null, null, insertX.getText(), insertY.getText(), null, null, null, null});
+                    setAngleRadiusFields(insertX.getText(), insertY.getText());
                 }
             }
         });
@@ -476,6 +479,17 @@ public class MainJFrame extends javax.swing.JFrame {
         }
         //return true;
         return null;
+    }
+    
+    private void setAngleRadiusFields(String x, String y){
+        float xF = Float.parseFloat(x);
+        float yF = Float.parseFloat(y);
+        
+        double angle = Math.atan(yF/xF);
+        double radius = Math.sqrt(Math.pow(xF, 2) + Math.pow(yF, 2));
+        
+        this.insertAngle.setText(""+angle);
+        this.insertRadius.setText(""+radius);
     }
     
     private boolean testCollision(Object[][] plane){
