@@ -433,7 +433,34 @@ public class MainJFrame extends javax.swing.JFrame {
         this.trackNearPlane.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                planeNearPlane(getSelectedPlanes());
+                TableModel modelo = planeTable.getModel();
+                Object[][] planes = new Object[2][8];
+                for(int i=0; i<(modelo.getRowCount()-1); i++){
+                    for(int j=i+1; j<modelo.getRowCount(); j++){
+                        for(int k=0; k<modelo.getColumnCount(); k++){
+                            planes[0][k] = modelo.getValueAt(i, k);
+                            planes[1][k] = modelo.getValueAt(j, k);
+                        }
+                        planeNearPlane(planes);
+                    }
+                }
+            }
+        });
+        
+        this.trackNearAirport.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TableModel modelo = planeTable.getModel();
+                Object[][] planes = new Object[2][8];
+                for(int i=0; i<(modelo.getRowCount()-1); i++){
+                    for(int j=i+1; j<modelo.getRowCount(); j++){
+                        for(int k=0; k<modelo.getColumnCount(); k++){
+                            planes[0][k] = modelo.getValueAt(i, k);
+                            planes[1][k] = modelo.getValueAt(j, k);
+                        }
+                        planeNearAirport(planes);
+                    }
+                }
             }
         });
         
@@ -442,7 +469,7 @@ public class MainJFrame extends javax.swing.JFrame {
             public void actionPerformed(ActionEvent e) {
                 int id;
                 for (Object[] plane : getSelectedPlanes()) {
-                    if(plane != null){
+                    if(plane[1] != null){
                         id = Integer.parseInt(plane[1].toString());
                         tableModel.removeRow(id);
                         tableModel.insertRow(id, transladar(plane));
@@ -457,10 +484,12 @@ public class MainJFrame extends javax.swing.JFrame {
             public void actionPerformed(ActionEvent e) {
                 int id;
                 for (Object[] plane : getSelectedPlanes()) {
-                    id = Integer.parseInt(plane[1].toString());
-                    tableModel.removeRow(id);
-                    tableModel.insertRow(id, rotacionar(plane));
-                    planeTable.setModel(tableModel);
+                    if(plane[1]!=null){
+                        id = Integer.parseInt(plane[1].toString());
+                        tableModel.removeRow(id);
+                        tableModel.insertRow(id, rotacionar(plane));
+                        planeTable.setModel(tableModel);
+                    }
                 }
             }
         });
@@ -470,10 +499,12 @@ public class MainJFrame extends javax.swing.JFrame {
             public void actionPerformed(ActionEvent e) {
                 int id;
                 for (Object[] plane : getSelectedPlanes()) {
-                    id = Integer.parseInt(plane[1].toString());
-                    tableModel.removeRow(id);
-                    tableModel.insertRow(id, escalonar(plane));
-                    planeTable.setModel(tableModel);
+                    if(plane[1]!=null){
+                        id = Integer.parseInt(plane[1].toString());
+                        tableModel.removeRow(id);
+                        tableModel.insertRow(id, escalonar(plane));
+                        planeTable.setModel(tableModel);
+                    }
                 }
             }
         });
@@ -575,45 +606,55 @@ public class MainJFrame extends javax.swing.JFrame {
     private boolean testCollision(Object[][] plane){
         double mA;
         double mB;
-
-        double angleA = (Float)plane[0][5];
-        double angleB = (Float)plane[1][5];
+        double xA = (Float)plane[0][2];
+        double xB = (Float)plane[1][2];
+        double yA = (Float)plane[0][3];
+        double yB = (Float)plane[1][3];
+        double dirA = (Float)plane[0][7];
+        double dirB = (Float)plane[1][7];
         
-        if(angleA>90 && angleA<270){
+        if((dirA == 90 || dirA == 270) && (dirB == 90 || dirB == 270)){
+            plane[0][5] = (Object)((float)plane[0][2]*Math.cos(Math.toRadians(-45)) + (float)plane[0][3]*Math.sin(Math.toRadians(-45)));
+            plane[1][5] = (Object)((float)plane[1][2]*Math.cos(Math.toRadians(-45)) + (float)plane[1][3]*Math.sin(Math.toRadians(-45)));
+            dirA -= 45;
+            dirB -= 45;
+        }
+        
+        /*if(angleA>90 && angleA<270){
             mA = (-1)*Math.tan(Math.toRadians(angleA+180));
         }
-        else{
-            mA = Math.tan(Math.toRadians(angleA));
-        }
+        else{*/
+        mA = Math.tan(Math.toRadians(dirA));
+        //}
         
-        if(angleB>90 && angleB<270){
+        /*if(angleB>90 && angleB<270){
             mB = (-1)*Math.tan(Math.toRadians(angleB+180));
         }
-        else{
-            mB = Math.tan(Math.toRadians(angleB));
-        }
+        else{*/
+        mB = Math.tan(Math.toRadians(dirB));
+        //}
         
-        if((mA>0 && mB>0) || (mA<0 && mB<0)){
+        /*if((mA>0 && mB>0) || (mA<0 && mB<0)){
             return false;
-        }
+        }*/
         
-        double yA = (double)plane[0][2]*mA;
-        double yB = (double)plane[1][2]*mB;
-        double xColl = (yA-yB)/(mA+mB);
-        double yCollA = yA + xColl;
-        double yCollB = yB + xColl;
+        double yAAlt = xA*mA;
+        double yBAlt = xB*mB;
+        double xColl = (yAAlt-yBAlt)/(mA+mB);
+        double yCollA = yAAlt + xColl;
+        double yCollB = yBAlt + xColl;
         
         if(yCollA == yCollB){
             float speedA = (float)plane[0][6];
             float speedB = (float)plane[1][6];
             
-            double distA = Math.sqrt(Math.pow((float)plane[0][2], 2) + Math.pow((float)plane[0][3], 2));
-            double distB = Math.sqrt(Math.pow((float)plane[1][2], 2) + Math.pow((float)plane[1][3], 2));
+            double distA = Math.sqrt(Math.pow((xColl-xA), 2) + Math.pow((yCollA-yA), 2));
+            double distB = Math.sqrt(Math.pow((xColl-xB), 2) + Math.pow((yCollB-yB), 2));
             
             double timeA = distA/speedA;
             double timeB = distB/speedB;
             
-            if(Math.abs(timeA - timeB) < Integer.parseInt(collisionTime.getText())){
+            if(Math.abs(timeA - timeB) < Float.parseFloat(collisionTime.getText())){
                 reportArea.append("Avião " + plane[0][1] + "em rota de colisão com avião " + plane[1][1]);
                 return true;
             }
@@ -627,8 +668,8 @@ public class MainJFrame extends javax.swing.JFrame {
     
     private Object[] escalonar(Object[] plane){
         if(testTransScaleFields()){
-            int x = Integer.parseInt(transX.getText());
-            int y = Integer.parseInt(transY.getText());
+            float x = Float.parseFloat(transX.getText());
+            float y = Float.parseFloat(transY.getText());
             
             plane[2] = (Object)((float)plane[2]*x);
             plane[3] = (Object)((float)plane[3]*y);
@@ -645,8 +686,8 @@ public class MainJFrame extends javax.swing.JFrame {
     
     private Object[] transladar(Object[] plane){
         if(testTransMoveFields()){
-            int x = Integer.parseInt(transX.getText());
-            int y = Integer.parseInt(transY.getText());
+            float x = Float.parseFloat(transX.getText());
+            float y = Float.parseFloat(transY.getText());
 
             float xPlane = ((Number)plane[2]).floatValue();
             plane[2] = (Object)(xPlane + x);
@@ -665,22 +706,41 @@ public class MainJFrame extends javax.swing.JFrame {
     
     private Object[] rotacionar(Object[] plane){
         if(testTransRotateFields()){
-            int x = Integer.parseInt(transX.getText());
-            int y = Integer.parseInt(transY.getText());
-            int angle = Integer.parseInt(transAngle.getText());
+            float x = Float.parseFloat(transX.getText());
+            float y = Float.parseFloat(transY.getText());
+            double angle = Math.toRadians(Integer.parseInt(transAngle.getText()));
             
-            float centerX = (float)plane[2] - x;
-            float centerY = (float)plane[3] - y;
+            double centerX;
+            double centerY;
+            
+            if(plane[2] instanceof Double){
+                centerX = (double)plane[2] - x;
+            }
+            else{
+                centerX = (float)plane[2] - x;
+            }
+            
+            if(plane[3] instanceof Double){
+                centerY = (double)plane[3] - y;
+            }
+            else{
+                centerY = (float)plane[3] - y;
+            }
+            
+            System.out.println("C"+centerX);
             
             plane[2] = (Object)(centerX*Math.cos(angle) - centerY*Math.sin(angle));
             plane[3] = (Object)(centerY*Math.cos(angle) + centerX*Math.sin(angle));
             
             plane = angleRadiusCalc(plane);
             
+            plane[2] = (double)plane[2]+x;
+            plane[3] = (double)plane[3]+y;
+            
             return plane;
         }
         else{
-            JOptionPane.showMessageDialog(null, "Preencha os campos X, Y e �ngulo");
+            JOptionPane.showMessageDialog(null, "Preencha os campos X, Y e ângulo");
             return null;
         }
     }
@@ -691,11 +751,34 @@ public class MainJFrame extends javax.swing.JFrame {
             float yDiff = (float)planes[0][3] - (float)planes[1][3];
             double dist = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
 
-            if(dist < Integer.parseInt(trackDistance.getText())){
-                reportArea.append("Distância entre " + (int)planes[0][1]+ " e " + (int)planes[1][1] + "EXCEDIDA: " + dist);
+            if(dist < Float.parseFloat(trackDistance.getText())){
+                reportArea.append("Distância entre " + (int)planes[0][1]+ " e " + (int)planes[1][1] + " EXCEDIDA: " + dist + "\n");
             }
             else{
-                reportArea.append("Distância entre " + (int)planes[0][1] + " e " + (int)planes[1][1]+ ": " + dist);
+                reportArea.append("Distância entre " + (int)planes[0][1] + " e " + (int)planes[1][1]+ ": " + dist + "\n");
+            }
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Preencha a distância");
+        }
+    }
+    
+    private void planeNearAirport(Object[][] planes){
+        if(testTrackFields()){
+            for(Object[] plane : planes){
+                double dist; 
+                if(plane[4] instanceof Double){
+                    dist = (double)plane[4];
+                }
+                else{
+                    dist = (float)plane[4];
+                }
+                if(dist < Float.parseFloat(trackDistance.getText())){
+                    reportArea.append("Distância entre " + (int)plane[1]+ " e o aeroporto EXCEDIDA: " + dist + "\n");
+                }
+                else{
+                    reportArea.append("Distância entre " + (int)plane[1] + " e o aeroporto: " + dist + "\n");
+                }
             }
         }
         else{
